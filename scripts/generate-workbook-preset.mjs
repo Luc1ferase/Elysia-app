@@ -1,21 +1,43 @@
 import fs from "node:fs";
 import path from "node:path";
-import { buildSampleListing, buildSampleProduct, marketIdForSheet, marketMeta, pickNumericValue } from "./workbook-config.mjs";
+import { buildSampleListing, buildSampleProduct, marketIdForSheet, marketMeta, pickNumericValue, pickTextValue } from "./workbook-config.mjs";
 
 const rootWorkbookJsonPath = path.resolve(process.cwd(), "../【升级】Shopee商品定价表（分享版） Copy.json");
 const rootFixturePath = path.resolve(process.cwd(), "../formula_validation_fixture.json");
 const presetOutputPath = path.resolve(process.cwd(), "src/data/workbookPreset.json");
 const sampleOutputPath = path.resolve(process.cwd(), "src/data/workbookSamples.json");
+const fullDataOutputPath = path.resolve(process.cwd(), "src/data/workbookFullData.json");
 
 const source = JSON.parse(fs.readFileSync(rootWorkbookJsonPath, "utf-8"));
 const fixture = JSON.parse(fs.readFileSync(rootFixturePath, "utf-8"));
 const logisticsSheet = source.sheets["物流价卡"];
 const timestamp = new Date().toISOString();
 
+function stableId(prefix, signature) {
+  return `${prefix}_${Buffer.from(signature).toString("base64url").replace(/-/g, "").replace(/_/g, "").slice(0, 20)}`;
+}
+
+function extractProductRecord(record) {
+  return {
+    sku: pickTextValue(record, ["货号"]),
+    name: pickTextValue(record, ["产品名字"]),
+    size: pickTextValue(record, ["规格"]),
+    costRmb: pickNumericValue(record, ["商品成本 RMB"]),
+    amortizedCostRmb: pickNumericValue(record, ["摊销成本"]),
+    weightGrams: pickNumericValue(record, ["实重 g"]),
+    localPrice: pickNumericValue(record, ["本地定价", "税前价"]),
+  };
+}
+
 const markets = [];
 const shippingRates = [];
-const products = [];
-const listings = [];
+const sampleProducts = [];
+const sampleListings = [];
+const fullProducts = [];
+const fullListings = [];
+
+const productIdBySignature = new Map();
+const listingKeySet = new Set();
 
 for (const [sheetName, meta] of Object.entries(marketMeta)) {
   const sheet = source.sheets[sheetName];
@@ -42,8 +64,53 @@ for (const [sheetName, meta] of Object.entries(marketMeta)) {
 
   const samples = fixture.sheets[sheetName]?.samples ?? [];
   for (const sample of samples) {
-    products.push(buildSampleProduct(sheetName, sample, timestamp));
-    listings.push(buildSampleListing(sheetName, sample, timestamp));
+    sampleProducts.push(buildSampleProduct(sheetName, sample, timestamp));
+    sampleListings.push(buildSampleListing(sheetName, sample, timestamp));
+  }
+
+  for (const record of sheet.records ?? []) {
+    const normalized = extractProductRecord(record);
+    if (!normalized.name || !Number.isFinite(normalized.costRmb) || !Number.isFinite(normalized.weightGrams) || !Number.isFinite(normalized.localPrice) || normalized.localPrice <= 0) {
+      continue;
+    }
+
+    const cleanedSku = normalized.sku && normalized.sku !== "x" ? normalized.sku : "";
+    const signature = cleanedSku
+      ? `sku:${cleanedSku}|${normalized.size}|${normalized.costRmb}|${normalized.amortizedCostRmb}|${normalized.weightGrams}`
+      : `fallback:${normalized.name}|${normalized.size}|${normalized.costRmb}|${normalized.amortizedCostRmb}|${normalized.weightGrams}`;
+
+    let productId = productIdBySignature.get(signature);
+    if (!productId) {
+      productId = stableId("full_prd", signature);
+      productIdBySignature.set(signature, productId);
+      fullProducts.push({
+        id: productId,
+        sku: cleanedSku || `${meta.code}-${record._row}`,
+        name: normalized.name,
+        size: normalized.size,
+        costRmb: normalized.costRmb,
+        amortizedCostRmb: normalized.amortizedCostRmb,
+        weightGrams: normalized.weightGrams,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      });
+    }
+
+    const listingKey = `${productId}:${marketId}`;
+    if (listingKeySet.has(listingKey)) {
+      continue;
+    }
+    listingKeySet.add(listingKey);
+
+    fullListings.push({
+      id: `full_lst_${meta.code.toLowerCase()}_${record._row}`,
+      productId,
+      marketId,
+      localPrice: normalized.localPrice,
+      isActive: true,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
   }
 
   if (meta.shippingStrategy === "taiwan_ifs") {
@@ -79,7 +146,8 @@ for (const [sheetName, meta] of Object.entries(marketMeta)) {
 
 fs.mkdirSync(path.dirname(presetOutputPath), { recursive: true });
 fs.writeFileSync(presetOutputPath, JSON.stringify({ markets, shippingRates }, null, 2));
-fs.writeFileSync(sampleOutputPath, JSON.stringify({ products, listings }, null, 2));
+fs.writeFileSync(sampleOutputPath, JSON.stringify({ products: sampleProducts, listings: sampleListings }, null, 2));
+fs.writeFileSync(fullDataOutputPath, JSON.stringify({ products: fullProducts, listings: fullListings }, null, 2));
 console.log(`Workbook preset generated: ${presetOutputPath}`);
 console.log(`Workbook samples generated: ${sampleOutputPath}`);
-
+console.log(`Workbook full dataset generated: ${fullDataOutputPath}`);

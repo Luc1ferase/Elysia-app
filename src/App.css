@@ -39,7 +39,7 @@ button {
   padding: 0.72rem 1.1rem;
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
   border: none;
-  transition: transform 120ms ease, opacity 120ms ease;
+  transition: transform 120ms ease, opacity 120ms ease, background 120ms ease;
 }
 
 button:hover {
@@ -73,7 +73,6 @@ textarea {
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
   font-size: 0.93rem;
 }
 
@@ -88,6 +87,9 @@ td {
 th {
   color: #94a3b8;
   font-weight: 600;
+  position: sticky;
+  top: 0;
+  background: rgba(15, 23, 42, 0.96);
 }
 
 .app-shell {
@@ -113,6 +115,10 @@ th {
   align-items: flex-start;
 }
 
+.hero-copy {
+  max-width: 920px;
+}
+
 .hero h1 {
   margin: 0.25rem 0 0.75rem;
   font-size: 2rem;
@@ -132,14 +138,23 @@ th {
   font-size: 0.82rem;
 }
 
-.hero-stats {
+.hero-actions {
+  margin-top: 1rem;
+}
+
+.hero-stats,
+.kpi-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(120px, 1fr));
   gap: 0.8rem;
+}
+
+.hero-stats {
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
   min-width: 300px;
 }
 
-.hero-stats div {
+.hero-stats div,
+.kpi-card {
   display: flex;
   flex-direction: column;
   padding: 1rem;
@@ -147,26 +162,42 @@ th {
   background: rgba(30, 41, 59, 0.7);
 }
 
-.hero-stats strong {
+.hero-stats strong,
+.kpi-card strong {
   font-size: 1.6rem;
   margin-bottom: 0.3rem;
 }
 
-.grid.two-columns {
+.kpi-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.kpi-card span,
+.kpi-card small {
+  color: #94a3b8;
+}
+
+.grid.two-columns,
+.insight-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.25rem;
+}
+
+.balanced-grid {
+  align-items: start;
 }
 
 .section-title {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  align-items: baseline;
+  align-items: flex-start;
 }
 
 .section-title h2,
-.panel-header h3 {
+.panel-header h3,
+.insight-panel h3 {
   margin: 0;
 }
 
@@ -175,8 +206,51 @@ th {
 .panel-header span,
 .sync-message,
 .sync-meta,
-.empty-state {
+.empty-state,
+.insight-panel li {
   color: #94a3b8;
+}
+
+.section-search,
+.section-select {
+  max-width: 300px;
+}
+
+.pill-group,
+.toolbar-inline,
+.market-switches,
+.actions,
+.table-actions,
+.sync-meta {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.pill,
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(30, 41, 59, 0.75);
+  color: #cbd5e1;
+  font-size: 0.85rem;
+}
+
+.status-pill.success {
+  background: rgba(22, 163, 74, 0.24);
+  color: #86efac;
+}
+
+.status-pill.error {
+  background: rgba(220, 38, 38, 0.24);
+  color: #fca5a5;
+}
+
+.status-pill.idle {
+  background: rgba(59, 130, 246, 0.18);
+  color: #93c5fd;
 }
 
 .form-grid {
@@ -186,7 +260,6 @@ th {
 }
 
 .product-grid,
-.market-grid,
 .shipping-grid,
 .listing-grid,
 .sync-grid {
@@ -194,15 +267,10 @@ th {
 }
 
 .market-grid {
+  display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.actions,
-.market-switches,
-.table-actions {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
 }
 
 .actions {
@@ -220,6 +288,22 @@ th {
   width: auto;
 }
 
+.table-shell {
+  margin-top: 1rem;
+  overflow: auto;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  background: rgba(2, 6, 23, 0.24);
+}
+
+.tall-table {
+  max-height: 420px;
+}
+
+.wide-table {
+  max-height: 520px;
+}
+
 .compare-layout {
   display: grid;
   gap: 1rem;
@@ -230,11 +314,11 @@ th {
   grid-template-columns: 1fr 1fr;
 }
 
-.pricing-panel {
+.pricing-panel,
+.insight-panel {
   padding: 1rem;
   border-radius: 18px;
   background: rgba(2, 6, 23, 0.36);
-  overflow: auto;
 }
 
 .panel-header {
@@ -254,15 +338,17 @@ th {
   font-weight: 700;
 }
 
+.insight-panel ul {
+  margin: 0.9rem 0 0;
+  padding-left: 1.1rem;
+}
+
 .sync-card {
   margin-bottom: 0.5rem;
 }
 
-.sync-meta {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-top: 0.75rem;
+.expanded-sync-grid {
+  grid-template-columns: 2fr repeat(5, minmax(0, 1fr));
 }
 
 .empty-state {

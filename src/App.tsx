@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import type { Listing, Market, Product, ShippingRate, WorkspaceData } from "./types";
-import { createEmptyListing, createEmptyMarket, createEmptyProduct, createEmptyShippingRate } from "./lib/defaults";
+import { createEmptyListing, createEmptyMarket, createEmptyProduct, createEmptyShippingRate, createInitialWorkspace } from "./lib/defaults";
 import { loadWorkspace, saveWorkspace } from "./lib/storage";
 import { calculatePricingRow } from "./lib/pricing";
 import { pingApi, pullSnapshot, pushSnapshot } from "./lib/api";
@@ -12,6 +12,10 @@ function now() {
 
 function formatPercent(value: number) {
   return `${(value * 100).toFixed(2)}%`;
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 }).format(value);
 }
 
 function App() {
@@ -26,6 +30,10 @@ function App() {
   const [editingShippingRateId, setEditingShippingRateId] = useState<string | null>(null);
   const [editingListingId, setEditingListingId] = useState<string | null>(null);
   const [apiMessage, setApiMessage] = useState("尚未连接服务器");
+  const [productQuery, setProductQuery] = useState("");
+  const [listingQuery, setListingQuery] = useState("");
+  const [shippingMarketFilter, setShippingMarketFilter] = useState<string>("all");
+  const [listingMarketFilter, setListingMarketFilter] = useState<string>("all");
 
   useEffect(() => {
     saveWorkspace(workspace);
@@ -33,6 +41,21 @@ function App() {
 
   const marketMap = useMemo(() => new Map(workspace.markets.map((market) => [market.id, market])), [workspace.markets]);
   const productMap = useMemo(() => new Map(workspace.products.map((product) => [product.id, product])), [workspace.products]);
+
+  const allPricingRows = useMemo(() => {
+    return workspace.listings
+      .filter((listing) => listing.isActive)
+      .map((listing) => {
+        const market = marketMap.get(listing.marketId);
+        const product = productMap.get(listing.productId);
+        if (!market || !product) {
+          return null;
+        }
+        const shippingRates = workspace.shippingRates.filter((rate) => rate.marketId === listing.marketId);
+        return calculatePricingRow({ product, market, listing, shippingRates });
+      })
+      .filter((row): row is NonNullable<typeof row> => Boolean(row));
+  }, [marketMap, productMap, workspace.listings, workspace.shippingRates]);
 
   const pricingViews = useMemo(() => {
     return selectedMarketIds
@@ -49,19 +72,74 @@ function App() {
             if (!product) {
               return null;
             }
-
             const shippingRates = workspace.shippingRates.filter((rate) => rate.marketId === marketId);
             return calculatePricingRow({ product, market, listing, shippingRates });
           })
           .filter((row): row is NonNullable<typeof row> => Boolean(row));
 
-        return { market, rows };
+        const totalProfitRmb = rows.reduce((sum, row) => sum + row.profitRmb, 0);
+        const averageMargin = rows.length ? rows.reduce((sum, row) => sum + row.grossMargin, 0) / rows.length : 0;
+        return { market, rows, totalProfitRmb, averageMargin };
       })
       .filter((view): view is NonNullable<typeof view> => Boolean(view));
   }, [marketMap, productMap, selectedMarketIds, workspace.listings, workspace.shippingRates]);
 
+  const filteredProducts = useMemo(() => {
+    const keyword = productQuery.trim().toLowerCase();
+    if (!keyword) {
+      return workspace.products;
+    }
+    return workspace.products.filter((product) => [product.sku, product.name, product.size].join(" ").toLowerCase().includes(keyword));
+  }, [productQuery, workspace.products]);
+
+  const filteredShippingRates = useMemo(() => {
+    if (shippingMarketFilter === "all") {
+      return workspace.shippingRates;
+    }
+    return workspace.shippingRates.filter((rate) => rate.marketId === shippingMarketFilter);
+  }, [shippingMarketFilter, workspace.shippingRates]);
+
+  const filteredListings = useMemo(() => {
+    const keyword = listingQuery.trim().toLowerCase();
+    return workspace.listings.filter((listing) => {
+      if (listingMarketFilter !== "all" && listing.marketId !== listingMarketFilter) {
+        return false;
+      }
+      if (!keyword) {
+        return true;
+      }
+      const product = productMap.get(listing.productId);
+      const market = marketMap.get(listing.marketId);
+      return [product?.sku, product?.name, market?.name].filter(Boolean).join(" ").toLowerCase().includes(keyword);
+    });
+  }, [listingMarketFilter, listingQuery, marketMap, productMap, workspace.listings]);
+
+  const overallStats = useMemo(() => {
+    const totalProfitRmb = allPricingRows.reduce((sum, row) => sum + row.profitRmb, 0);
+    const averageMargin = allPricingRows.length ? allPricingRows.reduce((sum, row) => sum + row.grossMargin, 0) / allPricingRows.length : 0;
+    const profitableCount = allPricingRows.filter((row) => row.profitRmb >= 0).length;
+    const bestRow = [...allPricingRows].sort((left, right) => right.profitRmb - left.profitRmb)[0];
+    const riskyRows = [...allPricingRows].filter((row) => row.grossMargin < 0.2).sort((left, right) => left.grossMargin - right.grossMargin).slice(0, 5);
+    return { totalProfitRmb, averageMargin, profitableCount, bestRow, riskyRows };
+  }, [allPricingRows]);
+
   function patchWorkspace(mutator: (current: WorkspaceData) => WorkspaceData) {
     setWorkspace((current) => mutator(current));
+  }
+
+  function resetEditorStates() {
+    setProductDraft(createEmptyProduct());
+    setMarketDraft(createEmptyMarket());
+    setShippingRateDraft(createEmptyShippingRate());
+    setListingDraft(createEmptyListing());
+    setEditingProductId(null);
+    setEditingMarketId(null);
+    setEditingShippingRateId(null);
+    setEditingListingId(null);
+  }
+
+  function setDefaultCompare(markets: Market[]) {
+    setSelectedMarketIds(markets.slice(0, 2).map((market) => market.id));
   }
 
   function submitProduct() {
@@ -240,16 +318,15 @@ function App() {
       shippingRates: ShippingRate[];
     };
 
-    setSelectedMarketIds([]);
-    setMarketDraft(createEmptyMarket());
-    setShippingRateDraft(createEmptyShippingRate());
-    setListingDraft(createEmptyListing());
-    patchWorkspace((current) => ({
+    resetEditorStates();
+    setDefaultCompare(workbookPreset.markets);
+    setWorkspace((current) => ({
       ...current,
       markets: workbookPreset.markets,
       shippingRates: workbookPreset.shippingRates,
       listings: [],
     }));
+    setApiMessage(`已导入 Excel 站点模板：${now()}`);
   }
 
   async function importWorkbookSampleDataset() {
@@ -263,11 +340,8 @@ function App() {
       import("./data/workbookSamples.json"),
     ]);
 
-    setSelectedMarketIds([]);
-    setProductDraft(createEmptyProduct());
-    setMarketDraft(createEmptyMarket());
-    setShippingRateDraft(createEmptyShippingRate());
-    setListingDraft(createEmptyListing());
+    resetEditorStates();
+    setDefaultCompare(workbookPreset.markets as Market[]);
     setWorkspace((current) => ({
       ...current,
       products: workbookSamples.products as Product[],
@@ -278,16 +352,63 @@ function App() {
     setApiMessage(`已导入 Excel 样例全量数据：${now()}`);
   }
 
+  async function importWorkbookFullDataset() {
+    const confirmed = window.confirm("这会把原始工作簿中的真实商品与上架数据导入工作区，是否继续？");
+    if (!confirmed) {
+      return;
+    }
+
+    const [{ default: workbookPreset }, { default: workbookFullData }] = await Promise.all([
+      import("./data/workbookPreset.json"),
+      import("./data/workbookFullData.json"),
+    ]);
+
+    resetEditorStates();
+    setDefaultCompare(workbookPreset.markets as Market[]);
+    setWorkspace((current) => ({
+      ...current,
+      products: workbookFullData.products as Product[],
+      markets: workbookPreset.markets as Market[],
+      shippingRates: workbookPreset.shippingRates as ShippingRate[],
+      listings: workbookFullData.listings as Listing[],
+    }));
+    setApiMessage(`已导入真实工作簿全量数据：${now()}`);
+  }
+
+  function resetWorkspace() {
+    const confirmed = window.confirm("这会清空当前本地工作区，仅保留 API 地址配置，是否继续？");
+    if (!confirmed) {
+      return;
+    }
+    const fresh = createInitialWorkspace();
+    fresh.sync.apiBaseUrl = workspace.sync.apiBaseUrl;
+    setWorkspace(fresh);
+    resetEditorStates();
+    setSelectedMarketIds([]);
+    setApiMessage("本地工作区已重置");
+  }
+
+  function exportWorkspace() {
+    const blob = new Blob([JSON.stringify(workspace, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `pricing-workspace-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <main className="app-shell">
       <section className="hero card">
-        <div>
+        <div className="hero-copy">
           <span className="eyebrow">Pricing Desk</span>
           <h1>跨境电商定价系统</h1>
-          <p>桌面端本地优先运行；服务器 API 仅负责同步与远端部署，任一端故障都不阻断另一端工作。</p>
+          <p>桌面端本地优先运行；服务器 API 仅负责同步与远端部署。你现在可以导入 Excel 站点模板、样例数据，或整份工作簿的真实商品数据。</p>
           <div className="actions hero-actions">
             <button className="ghost" onClick={importWorkbookPreset}>导入 Excel 站点模板</button>
-            <button onClick={importWorkbookSampleDataset}>导入 Excel 样例全量数据</button>
+            <button className="ghost" onClick={importWorkbookSampleDataset}>导入 Excel 样例数据</button>
+            <button onClick={importWorkbookFullDataset}>导入真实工作簿数据</button>
           </div>
         </div>
         <div className="hero-stats">
@@ -298,11 +419,37 @@ function App() {
         </div>
       </section>
 
-      <section className="grid two-columns">
+      <section className="kpi-grid">
+        <article className="kpi-card card">
+          <span>总利润（RMB）</span>
+          <strong>{formatNumber(overallStats.totalProfitRmb)}</strong>
+          <small>基于当前全部启用上架记录</small>
+        </article>
+        <article className="kpi-card card">
+          <span>平均毛利率</span>
+          <strong>{formatPercent(overallStats.averageMargin)}</strong>
+          <small>当前本地工作区整体均值</small>
+        </article>
+        <article className="kpi-card card">
+          <span>盈利商品数</span>
+          <strong>{overallStats.profitableCount}</strong>
+          <small>利润不低于 0 的记录数</small>
+        </article>
+        <article className="kpi-card card">
+          <span>最佳单品</span>
+          <strong>{overallStats.bestRow?.sku ?? "暂无"}</strong>
+          <small>{overallStats.bestRow ? `利润 ${formatNumber(overallStats.bestRow.profitRmb)} RMB` : "导入数据后可见"}</small>
+        </article>
+      </section>
+
+      <section className="grid two-columns balanced-grid">
         <div className="card">
           <div className="section-title">
-            <h2>商品管理</h2>
-            <span>维护 SKU、成本、均摊和重量</span>
+            <div>
+              <h2>商品管理</h2>
+              <span>维护 SKU、成本、均摊和重量</span>
+            </div>
+            <input className="section-search" value={productQuery} onChange={(event) => setProductQuery(event.target.value)} placeholder="搜索 SKU / 名称 / 规格" />
           </div>
           <div className="form-grid product-grid">
             <input value={productDraft.sku} onChange={(event) => setProductDraft({ ...productDraft, sku: event.target.value })} placeholder="SKU" />
@@ -316,30 +463,38 @@ function App() {
             <button onClick={submitProduct}>{editingProductId ? "更新商品" : "新增商品"}</button>
             <button className="ghost" onClick={() => { setProductDraft(createEmptyProduct()); setEditingProductId(null); }}>清空</button>
           </div>
-          <table>
-            <thead><tr><th>SKU</th><th>名称</th><th>规格</th><th>成本</th><th>重量</th><th>操作</th></tr></thead>
-            <tbody>
-              {workspace.products.map((product) => (
-                <tr key={product.id}>
-                  <td>{product.sku}</td>
-                  <td>{product.name}</td>
-                  <td>{product.size}</td>
-                  <td>{product.costRmb.toFixed(2)}</td>
-                  <td>{product.weightGrams}g</td>
-                  <td className="table-actions">
-                    <button className="ghost" onClick={() => { setProductDraft(product); setEditingProductId(product.id); }}>编辑</button>
-                    <button className="danger" onClick={() => patchWorkspace((current) => ({ ...current, products: current.products.filter((item) => item.id !== product.id), listings: current.listings.filter((item) => item.productId !== product.id) }))}>删除</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="table-shell">
+            <table>
+              <thead><tr><th>SKU</th><th>名称</th><th>规格</th><th>成本</th><th>重量</th><th>操作</th></tr></thead>
+              <tbody>
+                {filteredProducts.map((product) => (
+                  <tr key={product.id}>
+                    <td>{product.sku}</td>
+                    <td>{product.name}</td>
+                    <td>{product.size || "-"}</td>
+                    <td>{product.costRmb.toFixed(2)}</td>
+                    <td>{product.weightGrams}g</td>
+                    <td className="table-actions">
+                      <button className="ghost" onClick={() => { setProductDraft(product); setEditingProductId(product.id); }}>编辑</button>
+                      <button className="danger" onClick={() => patchWorkspace((current) => ({ ...current, products: current.products.filter((item) => item.id !== product.id), listings: current.listings.filter((item) => item.productId !== product.id) }))}>删除</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div className="card">
           <div className="section-title">
-            <h2>站点配置</h2>
-            <span>维护汇率、费率、固定扣减与说明</span>
+            <div>
+              <h2>站点配置</h2>
+              <span>维护汇率、费率、固定扣减与差异说明</span>
+            </div>
+            <div className="pill-group">
+              <span className="pill">对比位 {selectedMarketIds.length}/2</span>
+              <span className="pill">已选 {selectedMarketIds.map((id) => marketMap.get(id)?.name).filter(Boolean).join(" / ") || "无"}</span>
+            </div>
           </div>
           <div className="form-grid market-grid">
             <input value={marketDraft.code} onChange={(event) => setMarketDraft({ ...marketDraft, code: event.target.value })} placeholder="站点代码" />
@@ -362,40 +517,50 @@ function App() {
           <textarea value={marketDraft.notes} onChange={(event) => setMarketDraft({ ...marketDraft, notes: event.target.value })} placeholder="站点差异说明，如马来西亚固定扣减 0.54、越南固定扣减 3000 等" />
           <div className="actions">
             <button onClick={submitMarket}>{editingMarketId ? "更新站点" : "新增站点"}</button>
-            <button className="ghost" onClick={importWorkbookPreset}>导入 Excel 站点模板</button>
+            <button className="ghost" onClick={importWorkbookPreset}>站点模板</button>
+            <button className="ghost" onClick={importWorkbookFullDataset}>真实数据</button>
             <button className="ghost" onClick={() => { setMarketDraft(createEmptyMarket()); setEditingMarketId(null); }}>清空</button>
           </div>
-          <table>
-            <thead><tr><th>代码</th><th>站点</th><th>币种</th><th>汇率</th><th>固定扣减</th><th>操作</th></tr></thead>
-            <tbody>
-              {workspace.markets.map((market) => (
-                <tr key={market.id}>
-                  <td>{market.code}</td>
-                  <td>{market.name}</td>
-                  <td>{market.currency}</td>
-                  <td>{market.exchangeRate}</td>
-                  <td>{market.fixedAdjustment}</td>
-                  <td className="table-actions">
-                    <button className="ghost" onClick={() => { setMarketDraft(market); setEditingMarketId(market.id); }}>编辑</button>
-                    <button className="danger" onClick={() => patchWorkspace((current) => ({
-                      ...current,
-                      markets: current.markets.filter((item) => item.id !== market.id),
-                      shippingRates: current.shippingRates.filter((item) => item.marketId !== market.id),
-                      listings: current.listings.filter((item) => item.marketId !== market.id),
-                    }))}>删除</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="table-shell">
+            <table>
+              <thead><tr><th>代码</th><th>站点</th><th>币种</th><th>汇率</th><th>固定扣减</th><th>操作</th></tr></thead>
+              <tbody>
+                {workspace.markets.map((market) => (
+                  <tr key={market.id}>
+                    <td>{market.code}</td>
+                    <td>{market.name}</td>
+                    <td>{market.currency}</td>
+                    <td>{market.exchangeRate}</td>
+                    <td>{market.fixedAdjustment}</td>
+                    <td className="table-actions">
+                      <button className="ghost" onClick={() => { setMarketDraft(market); setEditingMarketId(market.id); }}>编辑</button>
+                      <button className={selectedMarketIds.includes(market.id) ? "selected" : "ghost"} onClick={() => setSelectedMarketIds((current) => current.includes(market.id) ? current.filter((item) => item !== market.id) : [...current, market.id].slice(-2))}>对比</button>
+                      <button className="danger" onClick={() => patchWorkspace((current) => ({
+                        ...current,
+                        markets: current.markets.filter((item) => item.id !== market.id),
+                        shippingRates: current.shippingRates.filter((item) => item.marketId !== market.id),
+                        listings: current.listings.filter((item) => item.marketId !== market.id),
+                      }))}>删除</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
-      <section className="grid two-columns">
+      <section className="grid two-columns balanced-grid">
         <div className="card">
           <div className="section-title">
-            <h2>物流价卡</h2>
-            <span>每个站点独立维护重量区间和物流费</span>
+            <div>
+              <h2>物流价卡</h2>
+              <span>按站点过滤和维护重量区间</span>
+            </div>
+            <select className="section-select" value={shippingMarketFilter} onChange={(event) => setShippingMarketFilter(event.target.value)}>
+              <option value="all">全部站点</option>
+              {workspace.markets.map((market) => <option value={market.id} key={market.id}>{market.name}</option>)}
+            </select>
           </div>
           <div className="form-grid shipping-grid">
             <select value={shippingRateDraft.marketId} onChange={(event) => setShippingRateDraft({ ...shippingRateDraft, marketId: event.target.value })}>
@@ -410,28 +575,39 @@ function App() {
             <button onClick={submitShippingRate}>{editingShippingRateId ? "更新物流档位" : "新增物流档位"}</button>
             <button className="ghost" onClick={() => { setShippingRateDraft(createEmptyShippingRate(shippingRateDraft.marketId)); setEditingShippingRateId(null); }}>清空</button>
           </div>
-          <table>
-            <thead><tr><th>站点</th><th>区间</th><th>费用</th><th>操作</th></tr></thead>
-            <tbody>
-              {workspace.shippingRates.map((rate) => (
-                <tr key={rate.id}>
-                  <td>{marketMap.get(rate.marketId)?.name ?? "未匹配站点"}</td>
-                  <td>{rate.minWeightGrams}g - {rate.maxWeightGrams}g</td>
-                  <td>{rate.feeLocal.toFixed(2)}</td>
-                  <td className="table-actions">
-                    <button className="ghost" onClick={() => { setShippingRateDraft(rate); setEditingShippingRateId(rate.id); }}>编辑</button>
-                    <button className="danger" onClick={() => patchWorkspace((current) => ({ ...current, shippingRates: current.shippingRates.filter((item) => item.id !== rate.id) }))}>删除</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="table-shell tall-table">
+            <table>
+              <thead><tr><th>站点</th><th>区间</th><th>费用</th><th>操作</th></tr></thead>
+              <tbody>
+                {filteredShippingRates.map((rate) => (
+                  <tr key={rate.id}>
+                    <td>{marketMap.get(rate.marketId)?.name ?? "未匹配站点"}</td>
+                    <td>{rate.minWeightGrams}g - {rate.maxWeightGrams}g</td>
+                    <td>{rate.feeLocal.toFixed(2)}</td>
+                    <td className="table-actions">
+                      <button className="ghost" onClick={() => { setShippingRateDraft(rate); setEditingShippingRateId(rate.id); }}>编辑</button>
+                      <button className="danger" onClick={() => patchWorkspace((current) => ({ ...current, shippingRates: current.shippingRates.filter((item) => item.id !== rate.id) }))}>删除</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div className="card">
-          <div className="section-title">
-            <h2>上架记录</h2>
-            <span>为商品分配站点与本地售价</span>
+          <div className="section-title stacked-mobile">
+            <div>
+              <h2>上架记录</h2>
+              <span>支持按站点过滤与关键词搜索</span>
+            </div>
+            <div className="toolbar-inline">
+              <select className="section-select" value={listingMarketFilter} onChange={(event) => setListingMarketFilter(event.target.value)}>
+                <option value="all">全部站点</option>
+                {workspace.markets.map((market) => <option value={market.id} key={market.id}>{market.name}</option>)}
+              </select>
+              <input className="section-search" value={listingQuery} onChange={(event) => setListingQuery(event.target.value)} placeholder="搜索 SKU / 名称 / 站点" />
+            </div>
           </div>
           <div className="form-grid listing-grid">
             <select value={listingDraft.productId} onChange={(event) => setListingDraft({ ...listingDraft, productId: event.target.value })}>
@@ -449,49 +625,94 @@ function App() {
             <button onClick={submitListing}>{editingListingId ? "更新上架记录" : "新增上架记录"}</button>
             <button className="ghost" onClick={() => { setListingDraft(createEmptyListing()); setEditingListingId(null); }}>清空</button>
           </div>
-          <table>
-            <thead><tr><th>商品</th><th>站点</th><th>售价</th><th>状态</th><th>操作</th></tr></thead>
-            <tbody>
-              {workspace.listings.map((listing) => (
-                <tr key={listing.id}>
-                  <td>{productMap.get(listing.productId)?.sku ?? "未知商品"}</td>
-                  <td>{marketMap.get(listing.marketId)?.name ?? "未知站点"}</td>
-                  <td>{listing.localPrice.toFixed(2)}</td>
-                  <td>{listing.isActive ? "启用" : "停用"}</td>
-                  <td className="table-actions">
-                    <button className="ghost" onClick={() => { setListingDraft(listing); setEditingListingId(listing.id); }}>编辑</button>
-                    <button className="danger" onClick={() => patchWorkspace((current) => ({ ...current, listings: current.listings.filter((item) => item.id !== listing.id) }))}>删除</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="table-shell tall-table">
+            <table>
+              <thead><tr><th>商品</th><th>站点</th><th>售价</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody>
+                {filteredListings.map((listing) => (
+                  <tr key={listing.id}>
+                    <td>{productMap.get(listing.productId)?.sku ?? "未知商品"}</td>
+                    <td>{marketMap.get(listing.marketId)?.name ?? "未知站点"}</td>
+                    <td>{listing.localPrice.toFixed(2)}</td>
+                    <td>{listing.isActive ? "启用" : "停用"}</td>
+                    <td className="table-actions">
+                      <button className="ghost" onClick={() => { setListingDraft(listing); setEditingListingId(listing.id); }}>编辑</button>
+                      <button className="danger" onClick={() => patchWorkspace((current) => ({ ...current, listings: current.listings.filter((item) => item.id !== listing.id) }))}>删除</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid two-columns balanced-grid">
+        <div className="card">
+          <div className="section-title">
+            <div>
+              <h2>经营洞察</h2>
+              <span>快速发现风险款与高利润款</span>
+            </div>
+            <span className="pill">活跃记录 {allPricingRows.length}</span>
+          </div>
+          <div className="insight-grid">
+            <div className="insight-panel">
+              <h3>低毛利预警</h3>
+              <ul>
+                {overallStats.riskyRows.length === 0 ? <li>暂无低毛利商品</li> : overallStats.riskyRows.map((row) => <li key={row.listingId}>{row.sku} · 毛利率 {formatPercent(row.grossMargin)} · 利润 {formatNumber(row.profitRmb)} RMB</li>)}
+              </ul>
+            </div>
+            <div className="insight-panel">
+              <h3>对比视图概览</h3>
+              <ul>
+                {pricingViews.length === 0 ? <li>请选择站点开始对比</li> : pricingViews.map((view) => <li key={view.market.id}>{view.market.name} · {view.rows.length} 款 · 平均毛利 {formatPercent(view.averageMargin)} · 利润 {formatNumber(view.totalProfitRmb)} RMB</li>)}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div className="card sync-card">
+          <div className="section-title">
+            <div>
+              <h2>同步与备份</h2>
+              <span>本地优先；可手动推送、拉取、导出和重置</span>
+            </div>
+            <span className={`status-pill ${workspace.sync.lastSyncStatus}`}>{workspace.sync.lastSyncStatus}</span>
+          </div>
+          <div className="sync-grid expanded-sync-grid">
+            <input value={workspace.sync.apiBaseUrl} onChange={(event) => patchWorkspace((current) => ({ ...current, sync: { ...current.sync, apiBaseUrl: event.target.value } }))} placeholder="API 地址" />
+            <button onClick={handlePing}>探活</button>
+            <button onClick={handlePush}>推送到服务器</button>
+            <button onClick={handlePull}>从服务器拉取</button>
+            <button className="ghost" onClick={exportWorkspace}>导出本地工作区</button>
+            <button className="danger" onClick={resetWorkspace}>重置本地工作区</button>
+          </div>
+          <p className="sync-message">{apiMessage}</p>
+          <div className="sync-meta">
+            <span>最近状态：{workspace.sync.lastSyncStatus}</span>
+            <span>最近同步：{workspace.sync.lastSyncAt ?? "尚未同步"}</span>
+            <span>错误信息：{workspace.sync.lastError ?? "无"}</span>
+          </div>
         </div>
       </section>
 
       <section className="card">
         <div className="section-title">
-          <h2>定价工作台</h2>
-          <span>单站点查看或双站点左右对比</span>
-        </div>
-        <div className="market-switches">
-          {workspace.markets.map((market) => {
-            const selected = selectedMarketIds.includes(market.id);
-            return (
-              <button
-                key={market.id}
-                className={selected ? "selected" : "ghost"}
-                onClick={() => setSelectedMarketIds((current) => {
-                  if (current.includes(market.id)) {
-                    return current.filter((item) => item !== market.id);
-                  }
-                  return [...current, market.id].slice(-2);
-                })}
-              >
-                {market.name}
-              </button>
-            );
-          })}
+          <div>
+            <h2>定价工作台</h2>
+            <span>单站点查看或双站点左右对比</span>
+          </div>
+          <div className="market-switches">
+            {workspace.markets.map((market) => {
+              const selected = selectedMarketIds.includes(market.id);
+              return (
+                <button key={market.id} className={selected ? "selected" : "ghost"} onClick={() => setSelectedMarketIds((current) => current.includes(market.id) ? current.filter((item) => item !== market.id) : [...current, market.id].slice(-2))}>
+                  {market.name}
+                </button>
+              );
+            })}
+          </div>
         </div>
         <div className={`compare-layout ${pricingViews.length > 1 ? "dual" : "single"}`}>
           {pricingViews.length === 0 ? <div className="empty-state">先选择至少一个站点查看计算结果。</div> : null}
@@ -504,52 +725,35 @@ function App() {
                 </div>
                 <span>{view.market.notes || "标准公式"}</span>
               </div>
-              <table>
-                <thead>
-                  <tr>
-                    <th>SKU</th><th>税前价</th><th>展示价</th><th>成本</th><th>物流</th><th>佣金</th><th>交易</th><th>活动</th><th>达人</th><th>税额</th><th>利润</th><th>毛利率</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {view.rows.map((row) => (
-                    <tr key={row.listingId}>
-                      <td>{row.sku}</td>
-                      <td>{row.localPrice.toFixed(2)}</td>
-                      <td>{row.displayPrice.toFixed(2)}</td>
-                      <td>{row.costLocal.toFixed(2)}</td>
-                      <td>{row.shippingFee.toFixed(2)}</td>
-                      <td>{row.commissionFee.toFixed(2)}</td>
-                      <td>{row.transactionFee.toFixed(2)}</td>
-                      <td>{row.promotionFee.toFixed(2)}</td>
-                      <td>{row.influencerFee.toFixed(2)}</td>
-                      <td>{row.taxFee.toFixed(2)}</td>
-                      <td className={row.profitLocal >= 0 ? "profit-positive" : "profit-negative"}>{row.profitLocal.toFixed(2)}</td>
-                      <td>{formatPercent(row.grossMargin)}</td>
+              <div className="table-shell wide-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>SKU</th><th>税前价</th><th>展示价</th><th>成本</th><th>物流</th><th>佣金</th><th>交易</th><th>活动</th><th>达人</th><th>税额</th><th>利润</th><th>毛利率</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {view.rows.map((row) => (
+                      <tr key={row.listingId}>
+                        <td>{row.sku}</td>
+                        <td>{row.localPrice.toFixed(2)}</td>
+                        <td>{row.displayPrice.toFixed(2)}</td>
+                        <td>{row.costLocal.toFixed(2)}</td>
+                        <td>{row.shippingFee.toFixed(2)}</td>
+                        <td>{row.commissionFee.toFixed(2)}</td>
+                        <td>{row.transactionFee.toFixed(2)}</td>
+                        <td>{row.promotionFee.toFixed(2)}</td>
+                        <td>{row.influencerFee.toFixed(2)}</td>
+                        <td>{row.taxFee.toFixed(2)}</td>
+                        <td className={row.profitLocal >= 0 ? "profit-positive" : "profit-negative"}>{row.profitLocal.toFixed(2)}</td>
+                        <td>{formatPercent(row.grossMargin)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ))}
-        </div>
-      </section>
-
-      <section className="card sync-card">
-        <div className="section-title">
-          <h2>同步中心</h2>
-          <span>本地优先；仅在你主动操作时与服务器交互</span>
-        </div>
-        <div className="sync-grid">
-          <input value={workspace.sync.apiBaseUrl} onChange={(event) => patchWorkspace((current) => ({ ...current, sync: { ...current.sync, apiBaseUrl: event.target.value } }))} placeholder="API 地址" />
-          <button onClick={handlePing}>探活</button>
-          <button onClick={handlePush}>推送到服务器</button>
-          <button onClick={handlePull}>从服务器拉取</button>
-        </div>
-        <p className="sync-message">{apiMessage}</p>
-        <div className="sync-meta">
-          <span>最近状态：{workspace.sync.lastSyncStatus}</span>
-          <span>最近同步：{workspace.sync.lastSyncAt ?? "尚未同步"}</span>
-          <span>错误信息：{workspace.sync.lastError ?? "无"}</span>
         </div>
       </section>
     </main>
