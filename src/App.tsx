@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import type { Listing, Market, Product, ShippingRate, WorkspaceData } from "./types";
 import { createEmptyListing, createEmptyMarket, createEmptyProduct, createEmptyShippingRate, createInitialWorkspace } from "./lib/defaults";
@@ -34,6 +34,7 @@ function App() {
   const [listingQuery, setListingQuery] = useState("");
   const [shippingMarketFilter, setShippingMarketFilter] = useState<string>("all");
   const [listingMarketFilter, setListingMarketFilter] = useState<string>("all");
+  const workbookInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     saveWorkspace(workspace);
@@ -307,6 +308,36 @@ function App() {
     }
   }
 
+  function openWorkbookPicker() {
+    workbookInputRef.current?.click();
+  }
+
+  async function handleWorkbookFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+
+    try {
+      const { importWorkbookFile } = await import("./lib/workbookImport");
+      const imported = await importWorkbookFile(file);
+      resetEditorStates();
+      setDefaultCompare(imported.markets);
+      setWorkspace((current) => ({
+        ...current,
+        products: imported.products,
+        markets: imported.markets,
+        shippingRates: imported.shippingRates,
+        listings: imported.listings,
+      }));
+      setApiMessage(`已导入本地工作簿：${file.name}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "未知错误";
+      setApiMessage(`导入工作簿失败：${message}`);
+    }
+  }
+
   async function importWorkbookPreset() {
     const confirmed = window.confirm("这会用 Excel 模板覆盖当前站点与物流价卡，并清空现有上架记录，是否继续？");
     if (!confirmed) {
@@ -400,12 +431,14 @@ function App() {
 
   return (
     <main className="app-shell">
+      <input ref={workbookInputRef} className="hidden-file-input" type="file" accept=".xlsx,.xlsm,.xls" onChange={handleWorkbookFileChange} />
       <section className="hero card">
         <div className="hero-copy">
           <span className="eyebrow">Pricing Desk</span>
           <h1>跨境电商定价系统</h1>
           <p>桌面端本地优先运行；服务器 API 仅负责同步与远端部署。你现在可以导入 Excel 站点模板、样例数据，或整份工作簿的真实商品数据。</p>
           <div className="actions hero-actions">
+            <button className="ghost" onClick={openWorkbookPicker}>导入本地 .xlsx</button>
             <button className="ghost" onClick={importWorkbookPreset}>导入 Excel 站点模板</button>
             <button className="ghost" onClick={importWorkbookSampleDataset}>导入 Excel 样例数据</button>
             <button onClick={importWorkbookFullDataset}>导入真实工作簿数据</button>

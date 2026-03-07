@@ -34,6 +34,7 @@ npm run dev
 ## Excel 模板导入
 
 - 将原始工作簿导出的 JSON 放在仓库根目录
+- 也可以直接在程序里点击“导入本地 .xlsx”，无需先手工转 JSON
 - 在 `elysia-app` 下运行 `npm run import:workbook`
 - 启动后点击界面内的“导入 Excel 站点模板”即可把站点参数和物流价卡载入本地工作区
 - 点击“导入 Excel 样例全量数据”可同时载入样例商品与上架记录
