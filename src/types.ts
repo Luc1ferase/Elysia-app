@@ -23,7 +23,7 @@ export interface Market {
   taxRate: number;
   fixedAdjustment: number;
   promotionFeeCap: number;
-  shippingStrategy: "rounded_weight_lookup" | "exact_weight_lookup";
+  shippingStrategy: "rounded_weight_lookup" | "exact_weight_lookup" | "taiwan_ifs";
   notes: string;
   createdAt: string;
   updatedAt: string;
@@ -72,6 +72,7 @@ export interface PricingRow {
   size: string;
   weightGrams: number;
   localPrice: number;
+  displayPrice: number;
   costLocal: number;
   shippingFee: number;
   commissionFee: number;
@@ -91,4 +92,3 @@ export interface SnapshotPayload {
   shippingRates: ShippingRate[];
   listings: Listing[];
 }
-

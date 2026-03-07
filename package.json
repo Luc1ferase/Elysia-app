@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "import:workbook": "node scripts/generate-workbook-preset.mjs",
     "preview": "vite preview",
     "tauri": "tauri"
   },

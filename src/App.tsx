@@ -229,6 +229,29 @@ function App() {
     }
   }
 
+  async function importWorkbookPreset() {
+    const confirmed = window.confirm("这会用 Excel 模板覆盖当前站点与物流价卡，并清空现有上架记录，是否继续？");
+    if (!confirmed) {
+      return;
+    }
+
+    const workbookPreset = (await import("./data/workbookPreset.json")).default as {
+      markets: Market[];
+      shippingRates: ShippingRate[];
+    };
+
+    setSelectedMarketIds([]);
+    setMarketDraft(createEmptyMarket());
+    setShippingRateDraft(createEmptyShippingRate());
+    setListingDraft(createEmptyListing());
+    patchWorkspace((current) => ({
+      ...current,
+      markets: workbookPreset.markets,
+      shippingRates: workbookPreset.shippingRates,
+      listings: [],
+    }));
+  }
+
   return (
     <main className="app-shell">
       <section className="hero card">
@@ -303,11 +326,13 @@ function App() {
             <select value={marketDraft.shippingStrategy} onChange={(event) => setMarketDraft({ ...marketDraft, shippingStrategy: event.target.value as Market["shippingStrategy"] })}>
               <option value="rounded_weight_lookup">向上取整查档</option>
               <option value="exact_weight_lookup">精确重量查档</option>
+              <option value="taiwan_ifs">台湾阶梯公式</option>
             </select>
           </div>
           <textarea value={marketDraft.notes} onChange={(event) => setMarketDraft({ ...marketDraft, notes: event.target.value })} placeholder="站点差异说明，如马来西亚固定扣减 0.54、越南固定扣减 3000 等" />
           <div className="actions">
             <button onClick={submitMarket}>{editingMarketId ? "更新站点" : "新增站点"}</button>
+            <button className="ghost" onClick={importWorkbookPreset}>导入 Excel 站点模板</button>
             <button className="ghost" onClick={() => { setMarketDraft(createEmptyMarket()); setEditingMarketId(null); }}>清空</button>
           </div>
           <table>
@@ -452,7 +477,7 @@ function App() {
               <table>
                 <thead>
                   <tr>
-                    <th>SKU</th><th>售价</th><th>成本</th><th>物流</th><th>佣金</th><th>交易</th><th>活动</th><th>达人</th><th>税</th><th>利润</th><th>毛利率</th>
+                    <th>SKU</th><th>税前价</th><th>展示价</th><th>成本</th><th>物流</th><th>佣金</th><th>交易</th><th>活动</th><th>达人</th><th>税额</th><th>利润</th><th>毛利率</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -460,6 +485,7 @@ function App() {
                     <tr key={row.listingId}>
                       <td>{row.sku}</td>
                       <td>{row.localPrice.toFixed(2)}</td>
+                      <td>{row.displayPrice.toFixed(2)}</td>
                       <td>{row.costLocal.toFixed(2)}</td>
                       <td>{row.shippingFee.toFixed(2)}</td>
                       <td>{row.commissionFee.toFixed(2)}</td>
@@ -501,4 +527,3 @@ function App() {
 }
 
 export default App;
-

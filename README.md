@@ -14,6 +14,7 @@
 
 ```bash
 npm install
+npm run import:workbook
 npm run tauri dev
 ```
 
@@ -28,3 +29,9 @@ npm run dev
 - 应用数据默认保存在桌面端本地 `localStorage`
 - 服务器 API 仅在用户主动同步时参与
 - 任一端故障都不会阻断另一端工作
+
+## Excel 模板导入
+
+- 将原始工作簿导出的 JSON 放在仓库根目录
+- 在 `elysia-app` 下运行 `npm run import:workbook`
+- 启动后点击界面内的“导入 Excel 站点模板”即可把站点参数和物流价卡载入本地工作区

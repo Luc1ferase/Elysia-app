@@ -8,7 +8,31 @@ function roundUpWeight(weightGrams: number, step = 10) {
   return Math.ceil(weightGrams / step) * step;
 }
 
+function resolveTaiwanShippingFee(weightGrams: number) {
+  const roundedWeight = roundUpWeight(weightGrams);
+  if (roundedWeight <= 500) {
+    return 25;
+  }
+  if (roundedWeight <= 1000) {
+    return 55;
+  }
+  if (roundedWeight <= 1500) {
+    return 95;
+  }
+  if (roundedWeight <= 2000) {
+    return 135;
+  }
+  if (roundedWeight <= 2500) {
+    return 185;
+  }
+  return 185 + 60 * Math.ceil((roundedWeight - 2500) / 500);
+}
+
 function resolveShippingFee(market: Market, product: Product, rates: ShippingRate[]) {
+  if (market.shippingStrategy === "taiwan_ifs") {
+    return resolveTaiwanShippingFee(product.weightGrams);
+  }
+
   if (!rates.length) {
     return 0;
   }
@@ -39,7 +63,8 @@ export function calculatePricingRow(input: {
   const transactionFee = listing.localPrice * market.transactionFeeRate;
   const promotionFee = Math.min(listing.localPrice * market.platformShippingRate, market.promotionFeeCap);
   const influencerFee = listing.localPrice * market.influencerRate;
-  const taxFee = listing.localPrice * market.taxRate;
+  const displayPrice = listing.localPrice * (1 + market.taxRate);
+  const taxFee = displayPrice - listing.localPrice;
   const profitLocal = listing.localPrice
     - costLocal
     - shippingFee
@@ -47,7 +72,6 @@ export function calculatePricingRow(input: {
     - transactionFee
     - promotionFee
     - influencerFee
-    - taxFee
     - market.fixedAdjustment;
 
   return {
@@ -58,6 +82,7 @@ export function calculatePricingRow(input: {
     size: product.size,
     weightGrams: product.weightGrams,
     localPrice: keepFourDigits(listing.localPrice),
+    displayPrice: keepFourDigits(displayPrice),
     costLocal: keepFourDigits(costLocal),
     shippingFee: keepFourDigits(shippingFee),
     commissionFee: keepFourDigits(commissionFee),
