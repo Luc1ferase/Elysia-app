@@ -252,6 +252,32 @@ function App() {
     }));
   }
 
+  async function importWorkbookSampleDataset() {
+    const confirmed = window.confirm("这会用 Excel 样例覆盖当前全部工作区数据，是否继续？");
+    if (!confirmed) {
+      return;
+    }
+
+    const [{ default: workbookPreset }, { default: workbookSamples }] = await Promise.all([
+      import("./data/workbookPreset.json"),
+      import("./data/workbookSamples.json"),
+    ]);
+
+    setSelectedMarketIds([]);
+    setProductDraft(createEmptyProduct());
+    setMarketDraft(createEmptyMarket());
+    setShippingRateDraft(createEmptyShippingRate());
+    setListingDraft(createEmptyListing());
+    setWorkspace((current) => ({
+      ...current,
+      products: workbookSamples.products as Product[],
+      markets: workbookPreset.markets as Market[],
+      shippingRates: workbookPreset.shippingRates as ShippingRate[],
+      listings: workbookSamples.listings as Listing[],
+    }));
+    setApiMessage(`已导入 Excel 样例全量数据：${now()}`);
+  }
+
   return (
     <main className="app-shell">
       <section className="hero card">
@@ -259,6 +285,10 @@ function App() {
           <span className="eyebrow">Pricing Desk</span>
           <h1>跨境电商定价系统</h1>
           <p>桌面端本地优先运行；服务器 API 仅负责同步与远端部署，任一端故障都不阻断另一端工作。</p>
+          <div className="actions hero-actions">
+            <button className="ghost" onClick={importWorkbookPreset}>导入 Excel 站点模板</button>
+            <button onClick={importWorkbookSampleDataset}>导入 Excel 样例全量数据</button>
+          </div>
         </div>
         <div className="hero-stats">
           <div><strong>{workspace.products.length}</strong><span>商品</span></div>

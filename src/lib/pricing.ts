@@ -8,6 +8,12 @@ function roundUpWeight(weightGrams: number, step = 10) {
   return Math.ceil(weightGrams / step) * step;
 }
 
+export function resolveLookupWeight(market: Market, product: Product) {
+  return market.shippingStrategy === "exact_weight_lookup"
+    ? product.weightGrams
+    : roundUpWeight(product.weightGrams);
+}
+
 function resolveTaiwanShippingFee(weightGrams: number) {
   const roundedWeight = roundUpWeight(weightGrams);
   if (roundedWeight <= 500) {
@@ -37,9 +43,7 @@ function resolveShippingFee(market: Market, product: Product, rates: ShippingRat
     return 0;
   }
 
-  const targetWeight = market.shippingStrategy === "exact_weight_lookup"
-    ? product.weightGrams
-    : roundUpWeight(product.weightGrams);
+  const targetWeight = resolveLookupWeight(market, product);
 
   const match = [...rates]
     .sort((left, right) => left.maxWeightGrams - right.maxWeightGrams)

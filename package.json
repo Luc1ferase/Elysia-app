@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "import:workbook": "node scripts/generate-workbook-preset.mjs",
+    "validate:formulas": "tsx scripts/validate-formulas.ts",
     "preview": "vite preview",
     "tauri": "tauri"
   },
@@ -17,11 +18,12 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
+    "tsx": "^4.21.0",
     "typescript": "~5.8.3",
-    "vite": "^7.0.4",
-    "@tauri-apps/cli": "^2"
+    "vite": "^7.0.4"
   }
 }

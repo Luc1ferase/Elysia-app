@@ -1,0 +1,786 @@
+{
+  "products": [
+    {
+      "id": "sample_prd_ph_5",
+      "sku": "PH-5-5",
+      "name": "AAAAA",
+      "size": "",
+      "costRmb": 20,
+      "amortizedCostRmb": 3,
+      "weightGrams": 100,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_ph_6",
+      "sku": "PH-6-6",
+      "name": "BBBBB",
+      "size": "",
+      "costRmb": 3,
+      "amortizedCostRmb": 2,
+      "weightGrams": 150,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_ph_7",
+      "sku": "PH-7-7",
+      "name": "CCCCC",
+      "size": "",
+      "costRmb": 17,
+      "amortizedCostRmb": 3,
+      "weightGrams": 300,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_ph_8",
+      "sku": "PH-8-8",
+      "name": "儿童浴巾斗篷批发速干珊瑚绒浴袍婴儿披风斗篷纯棉超柔带帽浴巾",
+      "size": "",
+      "costRmb": 17,
+      "amortizedCostRmb": 3,
+      "weightGrams": 300,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_ph_9",
+      "sku": "PH-9-9",
+      "name": "四季卡通可爱坐垫家居梳妆台隔音椅垫冰丝坐垫办公室透气防滑坐垫（40）",
+      "size": "",
+      "costRmb": 4,
+      "amortizedCostRmb": 3,
+      "weightGrams": 180,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_ph_10",
+      "sku": "PH-10-10",
+      "name": "Sample PH 10",
+      "size": "",
+      "costRmb": 6.3,
+      "amortizedCostRmb": 3,
+      "weightGrams": 200,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_ph_11",
+      "sku": "PH-11-11",
+      "name": "Sample PH 11",
+      "size": "",
+      "costRmb": 7.5,
+      "amortizedCostRmb": 3,
+      "weightGrams": 250,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_ph_12",
+      "sku": "PH-12-12",
+      "name": "烘焙系列珊瑚绒奶酪卡挂式卡通擦手巾吸水加厚卫生间厨房擦手毛巾",
+      "size": "",
+      "costRmb": 1.72,
+      "amortizedCostRmb": 6,
+      "weightGrams": 50,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_ph_13",
+      "sku": "PH-13-13",
+      "name": "Sample PH 13",
+      "size": "",
+      "costRmb": 11.6,
+      "amortizedCostRmb": 8,
+      "weightGrams": 500,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_ph_15",
+      "sku": "PH-15-15",
+      "name": "日式保温杯喷塑简约304不锈钢水杯便携车载咖啡杯学生随行杯",
+      "size": "",
+      "costRmb": 15.8,
+      "amortizedCostRmb": 7,
+      "weightGrams": 412,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_sg_5",
+      "sku": "SG-5-5",
+      "name": "AAAAA",
+      "size": "",
+      "costRmb": 20,
+      "amortizedCostRmb": 3,
+      "weightGrams": 100,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_sg_6",
+      "sku": "SG-6-6",
+      "name": "BBBBB",
+      "size": "",
+      "costRmb": 3,
+      "amortizedCostRmb": 2,
+      "weightGrams": 150,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_sg_7",
+      "sku": "SG-7-7",
+      "name": "CCCCC",
+      "size": "",
+      "costRmb": 50,
+      "amortizedCostRmb": 3,
+      "weightGrams": 400,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_sg_8",
+      "sku": "SG-8-8",
+      "name": "圣诞树脂雕像",
+      "size": "一体",
+      "costRmb": 35,
+      "amortizedCostRmb": 8,
+      "weightGrams": 400,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_sg_9",
+      "sku": "SG-9-9",
+      "name": "耶稣诞生8个装树脂雕像",
+      "size": "银色/彩色",
+      "costRmb": 35.2,
+      "amortizedCostRmb": 3,
+      "weightGrams": 250,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_sg_10",
+      "sku": "SG-10-10",
+      "name": "耶稣诞生5cm小雕像",
+      "size": "全套人物",
+      "costRmb": 31,
+      "amortizedCostRmb": 8,
+      "weightGrams": 300,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_sg_11",
+      "sku": "SG-11-11",
+      "name": "木屋耶稣诞生雕像",
+      "size": "无",
+      "costRmb": 8.5,
+      "amortizedCostRmb": 8,
+      "weightGrams": 200,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_sg_12",
+      "sku": "SG-12-12",
+      "name": "花园带灯耶稣诞生雕像",
+      "size": "无",
+      "costRmb": 38.8,
+      "amortizedCostRmb": 11,
+      "weightGrams": 800,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_sg_13",
+      "sku": "SG-13-13",
+      "name": "简化版银色马槽",
+      "size": "无",
+      "costRmb": 35,
+      "amortizedCostRmb": 8,
+      "weightGrams": 250,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_sg_14",
+      "sku": "SG-14-14",
+      "name": "装饰丝带",
+      "size": "",
+      "costRmb": 2.9,
+      "amortizedCostRmb": 8,
+      "weightGrams": 50,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_my_5",
+      "sku": "MY-5-5",
+      "name": "AAAAA",
+      "size": "",
+      "costRmb": 20,
+      "amortizedCostRmb": 3,
+      "weightGrams": 100,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_my_6",
+      "sku": "MY-6-6",
+      "name": "BBBBB",
+      "size": "",
+      "costRmb": 3,
+      "amortizedCostRmb": 2,
+      "weightGrams": 150,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_my_7",
+      "sku": "MY-7-7",
+      "name": "CCCCC",
+      "size": "",
+      "costRmb": 50,
+      "amortizedCostRmb": 3,
+      "weightGrams": 400,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_my_8",
+      "sku": "MY-8-8",
+      "name": "Sample MY 8",
+      "size": "",
+      "costRmb": 28.8,
+      "amortizedCostRmb": 6.5,
+      "weightGrams": 350,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_my_9",
+      "sku": "MY-9-9",
+      "name": "米白色/咖啡色",
+      "size": "",
+      "costRmb": 9.96,
+      "amortizedCostRmb": 2.5,
+      "weightGrams": 200,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_my_10",
+      "sku": "MY-10-10",
+      "name": "多色",
+      "size": "",
+      "costRmb": 22,
+      "amortizedCostRmb": 4.8,
+      "weightGrams": 350,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_my_11",
+      "sku": "MY-11-11",
+      "name": "桌旗",
+      "size": "",
+      "costRmb": 12.5,
+      "amortizedCostRmb": 7.5,
+      "weightGrams": 350,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_my_12",
+      "sku": "MY-12-12",
+      "name": "餐垫4",
+      "size": "",
+      "costRmb": 13,
+      "amortizedCostRmb": 7.5,
+      "weightGrams": 350,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_my_13",
+      "sku": "MY-13-13",
+      "name": "桌旗+餐垫套装",
+      "size": "",
+      "costRmb": 25,
+      "amortizedCostRmb": 7.5,
+      "weightGrams": 350,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_my_14",
+      "sku": "MY-14-14",
+      "name": "无",
+      "size": "",
+      "costRmb": 7,
+      "amortizedCostRmb": 7.5,
+      "weightGrams": 450,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_vn_5",
+      "sku": "VN-5-5",
+      "name": "AAAAA",
+      "size": "",
+      "costRmb": 20,
+      "amortizedCostRmb": 3,
+      "weightGrams": 100,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_vn_6",
+      "sku": "VN-6-6",
+      "name": "BBBBB",
+      "size": "",
+      "costRmb": 3,
+      "amortizedCostRmb": 2,
+      "weightGrams": 150,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_vn_7",
+      "sku": "VN-7-7",
+      "name": "CCCCC",
+      "size": "",
+      "costRmb": 50,
+      "amortizedCostRmb": 3,
+      "weightGrams": 400,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_th_5",
+      "sku": "TH-5-5",
+      "name": "AAAAA",
+      "size": "",
+      "costRmb": 20,
+      "amortizedCostRmb": 3,
+      "weightGrams": 100,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_th_6",
+      "sku": "TH-6-6",
+      "name": "BBBBB",
+      "size": "",
+      "costRmb": 3,
+      "amortizedCostRmb": 2,
+      "weightGrams": 150,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_th_7",
+      "sku": "TH-7-7",
+      "name": "CCCCC",
+      "size": "",
+      "costRmb": 50,
+      "amortizedCostRmb": 3,
+      "weightGrams": 400,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_tw_5",
+      "sku": "TW-5-5",
+      "name": "AAAAA",
+      "size": "",
+      "costRmb": 20,
+      "amortizedCostRmb": 3,
+      "weightGrams": 100,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_tw_6",
+      "sku": "TW-6-6",
+      "name": "BBBBB",
+      "size": "",
+      "costRmb": 3,
+      "amortizedCostRmb": 2,
+      "weightGrams": 150,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_prd_tw_7",
+      "sku": "TW-7-7",
+      "name": "CCCCC",
+      "size": "",
+      "costRmb": 50,
+      "amortizedCostRmb": 3,
+      "weightGrams": 400,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    }
+  ],
+  "listings": [
+    {
+      "id": "sample_lst_ph_5",
+      "productId": "sample_prd_ph_5",
+      "marketId": "preset_mkt_ph",
+      "localPrice": 500,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_ph_6",
+      "productId": "sample_prd_ph_6",
+      "marketId": "preset_mkt_ph",
+      "localPrice": 150,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_ph_7",
+      "productId": "sample_prd_ph_7",
+      "marketId": "preset_mkt_ph",
+      "localPrice": 550,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_ph_8",
+      "productId": "sample_prd_ph_8",
+      "marketId": "preset_mkt_ph",
+      "localPrice": 550,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_ph_9",
+      "productId": "sample_prd_ph_9",
+      "marketId": "preset_mkt_ph",
+      "localPrice": 249,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_ph_10",
+      "productId": "sample_prd_ph_10",
+      "marketId": "preset_mkt_ph",
+      "localPrice": 299,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_ph_11",
+      "productId": "sample_prd_ph_11",
+      "marketId": "preset_mkt_ph",
+      "localPrice": 349,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_ph_12",
+      "productId": "sample_prd_ph_12",
+      "marketId": "preset_mkt_ph",
+      "localPrice": 149,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_ph_13",
+      "productId": "sample_prd_ph_13",
+      "marketId": "preset_mkt_ph",
+      "localPrice": 699,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_ph_15",
+      "productId": "sample_prd_ph_15",
+      "marketId": "preset_mkt_ph",
+      "localPrice": 600,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_sg_5",
+      "productId": "sample_prd_sg_5",
+      "marketId": "preset_mkt_sg",
+      "localPrice": 8.8,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_sg_6",
+      "productId": "sample_prd_sg_6",
+      "marketId": "preset_mkt_sg",
+      "localPrice": 5.5,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_sg_7",
+      "productId": "sample_prd_sg_7",
+      "marketId": "preset_mkt_sg",
+      "localPrice": 32,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_sg_8",
+      "productId": "sample_prd_sg_8",
+      "marketId": "preset_mkt_sg",
+      "localPrice": 28,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_sg_9",
+      "productId": "sample_prd_sg_9",
+      "marketId": "preset_mkt_sg",
+      "localPrice": 21,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_sg_10",
+      "productId": "sample_prd_sg_10",
+      "marketId": "preset_mkt_sg",
+      "localPrice": 23,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_sg_11",
+      "productId": "sample_prd_sg_11",
+      "marketId": "preset_mkt_sg",
+      "localPrice": 12,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_sg_12",
+      "productId": "sample_prd_sg_12",
+      "marketId": "preset_mkt_sg",
+      "localPrice": 45,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_sg_13",
+      "productId": "sample_prd_sg_13",
+      "marketId": "preset_mkt_sg",
+      "localPrice": 25,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_sg_14",
+      "productId": "sample_prd_sg_14",
+      "marketId": "preset_mkt_sg",
+      "localPrice": 5.5,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_my_5",
+      "productId": "sample_prd_my_5",
+      "marketId": "preset_mkt_my",
+      "localPrice": 30,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_my_6",
+      "productId": "sample_prd_my_6",
+      "marketId": "preset_mkt_my",
+      "localPrice": 20,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_my_7",
+      "productId": "sample_prd_my_7",
+      "marketId": "preset_mkt_my",
+      "localPrice": 100,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_my_8",
+      "productId": "sample_prd_my_8",
+      "marketId": "preset_mkt_my",
+      "localPrice": 70,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_my_9",
+      "productId": "sample_prd_my_9",
+      "marketId": "preset_mkt_my",
+      "localPrice": 30,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_my_10",
+      "productId": "sample_prd_my_10",
+      "marketId": "preset_mkt_my",
+      "localPrice": 48,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_my_11",
+      "productId": "sample_prd_my_11",
+      "marketId": "preset_mkt_my",
+      "localPrice": 42,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_my_12",
+      "productId": "sample_prd_my_12",
+      "marketId": "preset_mkt_my",
+      "localPrice": 44,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_my_13",
+      "productId": "sample_prd_my_13",
+      "marketId": "preset_mkt_my",
+      "localPrice": 70,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_my_14",
+      "productId": "sample_prd_my_14",
+      "marketId": "preset_mkt_my",
+      "localPrice": 40,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_vn_5",
+      "productId": "sample_prd_vn_5",
+      "marketId": "preset_mkt_vn",
+      "localPrice": 199000,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_vn_6",
+      "productId": "sample_prd_vn_6",
+      "marketId": "preset_mkt_vn",
+      "localPrice": 49000,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_vn_7",
+      "productId": "sample_prd_vn_7",
+      "marketId": "preset_mkt_vn",
+      "localPrice": 365799,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_th_5",
+      "productId": "sample_prd_th_5",
+      "marketId": "preset_mkt_th",
+      "localPrice": 233,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_th_6",
+      "productId": "sample_prd_th_6",
+      "marketId": "preset_mkt_th",
+      "localPrice": 59,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_th_7",
+      "productId": "sample_prd_th_7",
+      "marketId": "preset_mkt_th",
+      "localPrice": 500,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_tw_5",
+      "productId": "sample_prd_tw_5",
+      "marketId": "preset_mkt_tw",
+      "localPrice": 300,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_tw_6",
+      "productId": "sample_prd_tw_6",
+      "marketId": "preset_mkt_tw",
+      "localPrice": 80,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    },
+    {
+      "id": "sample_lst_tw_7",
+      "productId": "sample_prd_tw_7",
+      "marketId": "preset_mkt_tw",
+      "localPrice": 500,
+      "isActive": true,
+      "createdAt": "2026-03-07T11:21:07.926Z",
+      "updatedAt": "2026-03-07T11:21:07.926Z"
+    }
+  ]
+}
