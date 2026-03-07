@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "tauri-app",
+        "title": "Pricing Desk",
         "width": 1500,
         "height": 920,
         "minWidth": 1280,
