@@ -35,6 +35,7 @@ function App() {
   const [shippingMarketFilter, setShippingMarketFilter] = useState<string>("all");
   const [listingMarketFilter, setListingMarketFilter] = useState<string>("all");
   const workbookInputRef = useRef<HTMLInputElement | null>(null);
+  const workspaceJsonInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     saveWorkspace(workspace);
@@ -312,6 +313,32 @@ function App() {
     workbookInputRef.current?.click();
   }
 
+  function openWorkspaceJsonPicker() {
+    workspaceJsonInputRef.current?.click();
+  }
+
+  async function handleWorkspaceJsonChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+
+    try {
+      const content = JSON.parse(await file.text()) as WorkspaceData;
+      if (!Array.isArray(content.products) || !Array.isArray(content.markets) || !Array.isArray(content.shippingRates) || !Array.isArray(content.listings) || !content.sync) {
+        throw new Error("文件结构不正确");
+      }
+      resetEditorStates();
+      setDefaultCompare(content.markets);
+      setWorkspace(content);
+      setApiMessage(`已导入工作区备份：${file.name}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "未知错误";
+      setApiMessage(`导入工作区失败：${message}`);
+    }
+  }
+
   async function handleWorkbookFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -432,6 +459,7 @@ function App() {
   return (
     <main className="app-shell">
       <input ref={workbookInputRef} className="hidden-file-input" type="file" accept=".xlsx,.xlsm,.xls" onChange={handleWorkbookFileChange} />
+      <input ref={workspaceJsonInputRef} className="hidden-file-input" type="file" accept="application/json,.json" onChange={handleWorkspaceJsonChange} />
       <section className="hero card">
         <div className="hero-copy">
           <span className="eyebrow">Pricing Desk</span>
@@ -719,6 +747,7 @@ function App() {
             <button onClick={handlePush}>推送到服务器</button>
             <button onClick={handlePull}>从服务器拉取</button>
             <button className="ghost" onClick={exportWorkspace}>导出本地工作区</button>
+            <button className="ghost" onClick={openWorkspaceJsonPicker}>导入工作区 JSON</button>
             <button className="danger" onClick={resetWorkspace}>重置本地工作区</button>
           </div>
           <p className="sync-message">{apiMessage}</p>

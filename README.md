@@ -38,4 +38,5 @@ npm run dev
 - 在 `elysia-app` 下运行 `npm run import:workbook`
 - 启动后点击界面内的“导入 Excel 站点模板”即可把站点参数和物流价卡载入本地工作区
 - 点击“导入 Excel 样例全量数据”可同时载入样例商品与上架记录
+- 工作区支持导出为 JSON，并可再次从界面导回
 - 运行 `npm run validate:formulas` 可用 `formula_validation_fixture.json` 对拍桌面端公式
