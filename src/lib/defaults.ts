@@ -64,6 +64,7 @@ export function createEmptyListing(): Listing {
     id: createId("lst"),
     productId: "",
     marketId: "",
+    marketSku: "",
     localPrice: 0,
     isActive: true,
     createdAt: timestamp,

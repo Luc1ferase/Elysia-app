@@ -34,24 +34,40 @@ function resolveTaiwanShippingFee(weightGrams: number) {
   return 185 + 60 * Math.ceil((roundedWeight - 2500) / 500);
 }
 
-function resolveShippingFee(market: Market, product: Product, rates: ShippingRate[]) {
+export function resolveShippingFeeForWeight(market: Market, weightGrams: number, rates: ShippingRate[]) {
   if (market.shippingStrategy === "taiwan_ifs") {
-    return resolveTaiwanShippingFee(product.weightGrams);
+    return resolveTaiwanShippingFee(weightGrams);
   }
 
   if (!rates.length) {
     return 0;
   }
 
-  const targetWeight = resolveLookupWeight(market, product);
-
-  const match = [...rates]
-    .sort((left, right) => left.maxWeightGrams - right.maxWeightGrams)
-    .find((rate) => targetWeight >= rate.minWeightGrams && targetWeight <= rate.maxWeightGrams);
-
+  const targetWeight = market.shippingStrategy === "exact_weight_lookup"
+    ? weightGrams
+    : roundUpWeight(weightGrams);
   const orderedRates = [...rates].sort((left, right) => left.maxWeightGrams - right.maxWeightGrams);
+  const match = orderedRates.find((rate) => targetWeight >= rate.minWeightGrams && targetWeight <= rate.maxWeightGrams);
 
   return match?.feeLocal ?? orderedRates[orderedRates.length - 1]?.feeLocal ?? 0;
+}
+
+function resolveShippingFee(market: Market, product: Product, rates: ShippingRate[]) {
+  return resolveShippingFeeForWeight(market, product.weightGrams, rates);
+}
+
+
+function resolveListingSku(listing: Listing, product: Product) {
+  if (listing.marketSku?.trim()) {
+    return listing.marketSku.trim();
+  }
+
+  const fallbackMatch = /^db_lst_([a-z]+)_(\d+)$/i.exec(listing.id);
+  if (fallbackMatch) {
+    return `${fallbackMatch[1].toUpperCase()}-${fallbackMatch[2]}`;
+  }
+
+  return product.sku;
 }
 
 export function calculatePricingRow(input: {
@@ -81,7 +97,7 @@ export function calculatePricingRow(input: {
   return {
     productId: product.id,
     listingId: listing.id,
-    sku: product.sku,
+    sku: resolveListingSku(listing, product),
     name: product.name,
     size: product.size,
     weightGrams: product.weightGrams,

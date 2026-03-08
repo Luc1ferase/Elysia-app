@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Pricing Desk",
+  "productName": "跨境电商定价系统",
   "version": "0.1.0",
   "identifier": "com.luciferase.pricing",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Pricing Desk",
+        "title": "跨境电商定价系统",
         "width": 1500,
         "height": 920,
         "minWidth": 1280,

@@ -43,6 +43,7 @@ export interface Listing {
   id: string;
   productId: string;
   marketId: string;
+  marketSku: string;
   localPrice: number;
   isActive: boolean;
   createdAt: string;
