@@ -157,6 +157,7 @@ function App() {
   const [listingMarketFilter, setListingMarketFilter] = useState<string>("all");
   const [selectedProductMarketId, setSelectedProductMarketId] = useState("");
   const [showProductSearch, setShowProductSearch] = useState(false);
+  const [expandedProductGroups, setExpandedProductGroups] = useState<Set<string>>(new Set());
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => loadThemeMode());
   const [shippingQuoteWeightGrams, setShippingQuoteWeightGrams] = useState(500);
   const [listingProductQuery, setListingProductQuery] = useState("");
@@ -203,6 +204,15 @@ function App() {
     }
     setSelectedProductMarketId((current) => current && workspace.markets.some((market) => market.id === current) ? current : workspace.markets[0]?.id ?? "");
   }, [workspace.markets]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (workspace.sync.apiBaseUrl && workspace.products.length > 0) {
+        handlePush().catch(err => console.error('自动推送失败:', err));
+      }
+    }, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [workspace]);
 
   const marketMap = useMemo(() => new Map(workspace.markets.map((market) => [market.id, market])), [workspace.markets]);
   const productMap = useMemo(() => new Map(workspace.products.map((product) => [product.id, product])), [workspace.products]);
@@ -287,6 +297,31 @@ function App() {
       .filter((view): view is NonNullable<typeof view> => Boolean(view));
   }, [activeListingsByMarket, marketMap, productMap, selectedMarketIds, shippingRatesByMarket]);
 
+  const allMarketStats = useMemo(() => {
+    return workspace.markets
+      .map((market) => {
+        const rows = (activeListingsByMarket.get(market.id) ?? [])
+          .map((listing) => {
+            const product = productMap.get(listing.productId);
+            if (!product) return null;
+            return calculatePricingRow({ product, market, listing, shippingRates: shippingRatesByMarket.get(market.id) ?? [] });
+          })
+          .filter((row): row is NonNullable<typeof row> => Boolean(row));
+        if (rows.length === 0) return null;
+        const totalProfitRmb = rows.reduce((sum, row) => sum + row.profitRmb, 0);
+        const averageMargin = rows.reduce((sum, row) => sum + row.grossMargin, 0) / rows.length;
+        return { market, rows, totalProfitRmb, averageMargin };
+      })
+      .filter((stat): stat is NonNullable<typeof stat> => Boolean(stat));
+  }, [workspace.markets, activeListingsByMarket, productMap, shippingRatesByMarket]);
+
+  const chartData = useMemo(() => {
+    const maxProfit = Math.max(...allMarketStats.map(v => Math.abs(v.totalProfitRmb)), 1);
+    const topProducts = [...workspace.products].sort((a, b) => b.costRmb - a.costRmb).slice(0, 10);
+    const maxCost = topProducts.length > 0 ? topProducts[0].costRmb : 1;
+    return { maxProfit, topProducts, maxCost };
+  }, [allMarketStats, workspace.products]);
+
   const currentProductMarket = useMemo(() => marketMap.get(selectedProductMarketId) ?? null, [marketMap, selectedProductMarketId]);
 
   const filteredProducts = useMemo(() => {
@@ -313,6 +348,19 @@ function App() {
       return naturalTextCollator.compare(leftValue, rightValue) * direction;
     });
   }, [listingsByMarket, productMap, productQuery, productSortDirection, productSortField, selectedProductMarketId]);
+
+  const groupedProducts = useMemo(() => {
+    const groups = new Map<string, Array<{ product: Product; listing: Listing; displaySku: string }>>();
+    for (const item of filteredProducts) {
+      const baseSku = item.product.size && item.displaySku.endsWith(`-${item.product.size}`)
+        ? item.displaySku.slice(0, -item.product.size.length - 1)
+        : item.displaySku;
+      const group = groups.get(baseSku) || [];
+      group.push(item);
+      groups.set(baseSku, group);
+    }
+    return groups;
+  }, [filteredProducts]);
 
   const filteredShippingRates = useMemo(() => {
     if (shippingMarketFilter === "all") return workspace.shippingRates;
@@ -398,7 +446,7 @@ function App() {
       const createdListing = { ...createEmptyListing(), productId: createdProduct.id, marketId: selectedProductMarketId, marketSku: productDraft.sku.trim(), localPrice: 0, isActive: true, createdAt: timestamp, updatedAt: timestamp };
       return { ...current, products: [createdProduct, ...current.products], listings: [createdListing, ...current.listings] };
     });
-    setProductDraft(createEmptyProduct());
+    setProductDraft({ ...createEmptyProduct(), sku: productDraft.sku, name: productDraft.name });
     setEditingProductId(null);
   }
 
@@ -488,26 +536,6 @@ function App() {
     setApiMessage(`已导入 Excel 站点模板：${now()}`);
   }
 
-  async function importWorkbookSampleDataset() {
-    const confirmed = window.confirm("这会用 Excel 样例覆盖当前全部工作区数据，是否继续？");
-    if (!confirmed) return;
-    const [{ default: workbookPreset }, { default: workbookSamples }] = await Promise.all([import("./data/workbookPreset.json"), import("./data/workbookSamples.json")]);
-    resetEditorStates();
-    setSelectedMarketIds((workbookPreset.markets as Market[]).slice(0, 2).map((market) => market.id));
-    setWorkspace((current) => ({ ...current, products: workbookSamples.products as Product[], markets: workbookPreset.markets as Market[], shippingRates: workbookPreset.shippingRates as ShippingRate[], listings: workbookSamples.listings as Listing[] }));
-    setApiMessage(`已导入 Excel 样例全量数据：${now()}`);
-  }
-
-  async function importWorkbookFullDataset() {
-    const confirmed = window.confirm("这会把原始工作簿中的真实商品与上架数据导入工作区，是否继续？");
-    if (!confirmed) return;
-    const [{ default: workbookPreset }, { default: workbookFullData }] = await Promise.all([import("./data/workbookPreset.json"), import("./data/workbookFullData.json")]);
-    resetEditorStates();
-    setSelectedMarketIds((workbookPreset.markets as Market[]).slice(0, 2).map((market) => market.id));
-    setWorkspace((current) => ({ ...current, products: workbookFullData.products as Product[], markets: workbookPreset.markets as Market[], shippingRates: workbookPreset.shippingRates as ShippingRate[], listings: workbookFullData.listings as Listing[] }));
-    setApiMessage(`已导入真实工作簿全量数据：${now()}`);
-  }
-
   function resetWorkspace() {
     const confirmed = window.confirm("这会清空当前本地工作区，仅保留 API 地址配置，是否继续？");
     if (!confirmed) return;
@@ -568,14 +596,12 @@ function App() {
         <>
           <section className="overview-grid">
             <div className="card">
-              <div className="section-title"><div><h2>快速入口</h2><span>导入数据、加载模板、切换工作区来源</span></div></div>
+              <div className="section-title"><div><h2>快速入口</h2><span>从服务器同步数据</span></div></div>
               <div className="actions hero-actions compact-actions">
-                <button className="ghost" onClick={importWorkbookPreset}>导入 Excel 站点模板</button>
-                <button className="ghost" onClick={importWorkbookSampleDataset}>导入 Excel 样例数据</button>
-                <button onClick={importWorkbookFullDataset}>导入真实工作簿数据</button>
-                <button className="ghost" onClick={handlePull}>从服务器拉取</button>
+                <button onClick={handlePull}>从服务器拉取</button>
+                <button onClick={handlePush}>推送到服务器</button>
               </div>
-              <p className="hint-text">建议首次使用时先点“导入真实工作簿数据”，如果数据库里已经有数据，也可以直接从服务器拉取。</p>
+              <p className="hint-text">点击从服务器拉取获取最新数据，或推送到服务器保存本地修改。</p>
             </div>
             <div className="kpi-grid">
               <article className="kpi-card card"><span>总利润（RMB）</span><strong>{formatNumber(overallStats.totalProfitRmb)}</strong><small>基于当前全部启用上架记录</small></article>
@@ -587,9 +613,28 @@ function App() {
           <section className="grid two-columns balanced-grid">
             <div className="card">
               <div className="section-title"><div><h2>经营洞察</h2><span>快速发现风险款与高利润款</span></div><span className="pill">活跃记录 {allPricingRows.length}</span></div>
+              {allMarketStats.length > 0 && (
+                <div className="chart-section">
+                  <h3>站点利润对比</h3>
+                  <div className="bar-chart">
+                    {allMarketStats.map((stat) => {
+                      const width = (Math.abs(stat.totalProfitRmb) / chartData.maxProfit) * 100;
+                      return (
+                        <div key={stat.market.id} className="bar-row">
+                          <span className="bar-label">{stat.market.name}</span>
+                          <div className="bar-container">
+                            <div className="bar-fill" style={{ width: `${width}%`, backgroundColor: stat.totalProfitRmb < 0 ? '#ef4444' : '#10b981' }}></div>
+                          </div>
+                          <span className="bar-value">{formatNumber(stat.totalProfitRmb)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <div className="insight-grid">
-                <div className="insight-panel"><h3>低毛利预警</h3><ul>{overallStats.riskyRows.length === 0 ? <li>暂无低毛利商品</li> : overallStats.riskyRows.map((row) => <li key={row.listingId}>{row.sku} · 毛利率 {formatPercent(row.grossMargin)} · 利润 {formatNumber(row.profitRmb)} RMB</li>)}</ul></div>
-                <div className="insight-panel"><h3>对比视图概览</h3><ul>{pricingViews.length === 0 ? <li>请选择站点开始对比</li> : pricingViews.map((view) => <li key={view.market.id}>{view.market.name} · {view.rows.length} 款 · 平均毛利 {formatPercent(view.averageMargin)} · 利润 {formatNumber(view.totalProfitRmb)} RMB</li>)}</ul></div>
+                <div className="insight-panel"><h3>低毛利预警</h3><ul>{overallStats.riskyRows.length === 0 ? <li>暂无低毛利商品</li> : overallStats.riskyRows.slice(0, 5).map((row) => <li key={row.listingId}>{row.sku} · 毛利率 {formatPercent(row.grossMargin)} · 利润 {formatNumber(row.profitRmb)} RMB</li>)}</ul></div>
+                <div className="insight-panel"><h3>高利润 TOP5</h3><ul>{allPricingRows.length === 0 ? <li>导入数据后可见</li> : [...allPricingRows].sort((a, b) => b.profitRmb - a.profitRmb).slice(0, 5).map((row) => <li key={row.listingId}>{row.sku} · 毛利率 {formatPercent(row.grossMargin)} · 利润 {formatNumber(row.profitRmb)} RMB</li>)}</ul></div>
               </div>
             </div>
             <div className="card">
@@ -600,6 +645,25 @@ function App() {
                 <div className="summary-block"><span>物流档位</span><strong>{workspace.shippingRates.length}</strong></div>
                 <div className="summary-block"><span>上架记录</span><strong>{workspace.listings.length}</strong></div>
               </div>
+              {chartData.topProducts.length > 0 && (
+                <div className="chart-section">
+                  <h3>商品成本 TOP10</h3>
+                  <div className="bar-chart">
+                    {chartData.topProducts.map((product) => {
+                      const width = (product.costRmb / chartData.maxCost) * 100;
+                      return (
+                        <div key={product.id} className="bar-row">
+                          <span className="bar-label">{product.sku || product.name}</span>
+                          <div className="bar-container">
+                            <div className="bar-fill" style={{ width: `${width}%`, backgroundColor: '#3b82f6' }}></div>
+                          </div>
+                          <span className="bar-value">{product.costRmb.toFixed(2)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <p className="sync-message">{apiMessage}</p>
             </div>
           </section>
@@ -642,19 +706,56 @@ function App() {
                   <th>操作</th>
                 </tr></thead>
                 <tbody>
-                  {filteredProducts.map(({ product, listing, displaySku }) => (
-                    <tr key={listing.id}>
-                      <td>{displaySku}</td><td>{product.name}</td><td>{product.size || "-"}</td><td>{product.costRmb.toFixed(2)}</td><td>{product.weightGrams}g</td>
-                      <td><div className="row-actions no-wrap-actions">
-                        <button className="ghost slim-action" onClick={() => { setProductDraft({ ...product, sku: displaySku }); setEditingProductId(product.id); }}>编辑</button>
-                        <button className="danger slim-action danger-icon" title={`从 ${currentProductMarket?.name ?? "当前国家"} 删除 ${displaySku}`} onClick={() => patchWorkspace((current) => {
-                          const nextListings = current.listings.filter((item) => item.id !== listing.id);
-                          const stillReferenced = nextListings.some((item) => item.productId === product.id);
-                          return { ...current, listings: nextListings, products: stillReferenced ? current.products : current.products.filter((item) => item.id !== product.id) };
-                        })}>删</button>
-                      </div></td>
-                    </tr>
-                  ))}
+                  {Array.from(groupedProducts.entries()).flatMap(([baseSku, items]) => {
+                    if (items.length === 1) {
+                      const { product, listing, displaySku } = items[0];
+                      return (
+                        <tr key={listing.id}>
+                          <td>{displaySku}</td><td>{product.name}</td><td>{product.size || "-"}</td><td>{product.costRmb.toFixed(2)}</td><td>{product.weightGrams}g</td>
+                          <td><div className="row-actions no-wrap-actions">
+                            <button className="ghost slim-action" onClick={() => { setProductDraft({ ...product, sku: displaySku }); setEditingProductId(product.id); }}>编辑</button>
+                            <button className="danger slim-action danger-icon" title={`从 ${currentProductMarket?.name ?? "当前国家"} 删除 ${displaySku}`} onClick={() => patchWorkspace((current) => {
+                              const nextListings = current.listings.filter((item) => item.id !== listing.id);
+                              const stillReferenced = nextListings.some((item) => item.productId === product.id);
+                              return { ...current, listings: nextListings, products: stillReferenced ? current.products : current.products.filter((item) => item.id !== product.id) };
+                            })}>删</button>
+                          </div></td>
+                        </tr>
+                      );
+                    }
+                    const isExpanded = expandedProductGroups.has(baseSku);
+                    const firstItem = items[0];
+                    const rows = [];
+                    rows.push(
+                      <tr key={`parent-${baseSku}`} style={{ cursor: 'pointer', fontWeight: 500 }} onClick={() => setExpandedProductGroups(prev => {
+                        const next = new Set(prev);
+                        if (next.has(baseSku)) next.delete(baseSku); else next.add(baseSku);
+                        return next;
+                      })}>
+                        <td>{baseSku} {isExpanded ? '▼' : '▶'}</td>
+                        <td>{firstItem.product.name}</td>
+                        <td colSpan={4} style={{ color: '#888' }}>{items.length}个规格</td>
+                      </tr>
+                    );
+                    if (isExpanded) {
+                      items.forEach(({ product, listing, displaySku }) => {
+                        rows.push(
+                          <tr key={listing.id} style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
+                            <td style={{ paddingLeft: '2em' }}>{displaySku}</td><td>{product.name}</td><td>{product.size || "-"}</td><td>{product.costRmb.toFixed(2)}</td><td>{product.weightGrams}g</td>
+                            <td><div className="row-actions no-wrap-actions">
+                              <button className="ghost slim-action" onClick={(e) => { e.stopPropagation(); setProductDraft({ ...product, sku: displaySku }); setEditingProductId(product.id); }}>编辑</button>
+                              <button className="danger slim-action danger-icon" title={`从 ${currentProductMarket?.name ?? "当前国家"} 删除 ${displaySku}`} onClick={(e) => { e.stopPropagation(); patchWorkspace((current) => {
+                                const nextListings = current.listings.filter((item) => item.id !== listing.id);
+                                const stillReferenced = nextListings.some((item) => item.productId === product.id);
+                                return { ...current, listings: nextListings, products: stillReferenced ? current.products : current.products.filter((item) => item.id !== product.id) };
+                              }); }}>删</button>
+                            </div></td>
+                          </tr>
+                        );
+                      });
+                    }
+                    return rows;
+                  })}
                 </tbody>
               </table>
             </div>
@@ -812,7 +913,6 @@ function App() {
             <div className="actions">
               <button onClick={submitMarket}>{editingMarketId ? "更新站点" : "新增站点"}</button>
               <button className="ghost" onClick={importWorkbookPreset}>站点模板</button>
-              <button className="ghost" onClick={importWorkbookFullDataset}>真实数据</button>
               <button className="ghost" onClick={() => { setMarketDraft(createEmptyMarket()); setEditingMarketId(null); }}>清空</button>
             </div>
           </div>
