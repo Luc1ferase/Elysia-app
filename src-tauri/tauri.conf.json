@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "跨境电商定价系统",
-  "version": "0.1.0",
+  "productName": "CrossBorderPricing",
+  "version": "1.1.0",
   "identifier": "com.luciferase.pricing",
   "build": {
     "beforeDevCommand": "npm run dev",
