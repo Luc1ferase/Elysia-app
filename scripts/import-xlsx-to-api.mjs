@@ -3,9 +3,9 @@ import path from "node:path";
 import { read, utils } from "xlsx";
 import { marketMeta, pickNumericValue, pickTextValue } from "./workbook-config.mjs";
 
-const apiBaseUrl = process.env.API_BASE_URL?.replace(/\/$/, "") || "http://127.0.0.1:3000";
-const workbookPath = path.resolve(process.cwd(), "../【升级】Shopee商品定价表（分享版） Copy.xlsx");
-const backupPath = path.resolve("/tmp/pricing-workspace-before-excel-import.json");
+const apiBaseUrl = process.env.API_BASE_URL?.replace(/\/$/, "") || "http://127.0.0.1:9800";
+const workbookPath = path.resolve(process.cwd(), process.argv[2] || "../V2.xlsx");
+const backupPath = path.resolve(process.cwd(), "pricing-workspace-before-excel-import.json");
 const timestamp = new Date().toISOString();
 
 function clean(value) {
@@ -80,6 +80,9 @@ function extractMarketSheet(ws, sheetName) {
     if (typeof header === "string") {
       headers.push(header);
       selectedColumns.push(col);
+    } else if (col === 3) {
+      headers.push("规格");
+      selectedColumns.push(col);
     }
   }
 
@@ -125,7 +128,7 @@ function extractLogisticsSheet(ws) {
       });
       entries.push(entry);
     }
-    markets[marketName] = { columns, entries };
+    markets[marketName] = { columns, entries: entries.slice(0, 20) };
   }
   return { markets };
 }
@@ -163,10 +166,12 @@ function buildSnapshot() {
       updatedAt: timestamp,
     });
 
+    let lastSku = "";
+    let lastName = "";
     for (const record of sheet.records) {
-      const name = pickTextValue(record, ["产品名字"]);
+      const name = pickTextValue(record, ["产品名字"]) || lastName;
       const size = pickTextValue(record, ["规格"]);
-      const sku = pickTextValue(record, ["货号"]);
+      const sku = pickTextValue(record, ["货号"]) || lastSku;
       const costRmb = pickNumericValue(record, ["商品成本 RMB"]);
       const amortizedCostRmb = pickNumericValue(record, ["摊销成本"]);
       const weightGrams = pickNumericValue(record, ["实重 g"]);
@@ -174,17 +179,23 @@ function buildSnapshot() {
       const row = Number(record._row);
       if (!name || !Number.isFinite(costRmb) || !Number.isFinite(weightGrams) || !Number.isFinite(localPrice) || localPrice <= 0) continue;
 
+      if (sku && sku !== "x") lastSku = sku;
+      if (name) lastName = name;
+
       const cleanedSku = sku && sku !== "x" ? sku : "";
       const signature = cleanedSku
-        ? `sku:${cleanedSku}|${size}|${costRmb}|${amortizedCostRmb}|${weightGrams}`
-        : `fallback:${name}|${size}|${costRmb}|${amortizedCostRmb}|${weightGrams}`;
+        ? `sku:${cleanedSku}|${size}`
+        : `fallback:${name}|${size}`;
       let productId = productIdBySignature.get(signature);
       if (!productId) {
         productId = stableId("db_prd", signature);
         productIdBySignature.set(signature, productId);
+        const finalSku = cleanedSku
+          ? (size ? `${cleanedSku}-${size}` : cleanedSku)
+          : `${meta.code}-${row}`;
         products.push({
           id: productId,
-          sku: cleanedSku || `${meta.code}-${row}`,
+          sku: finalSku,
           name,
           size,
           costRmb,

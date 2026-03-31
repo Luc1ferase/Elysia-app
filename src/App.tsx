@@ -352,8 +352,8 @@ function App() {
   const groupedProducts = useMemo(() => {
     const groups = new Map<string, Array<{ product: Product; listing: Listing; displaySku: string }>>();
     for (const item of filteredProducts) {
-      const baseSku = item.product.size && item.displaySku.endsWith(`-${item.product.size}`)
-        ? item.displaySku.slice(0, -item.product.size.length - 1)
+      const baseSku = item.product.size && item.product.sku.endsWith(`-${item.product.size}`)
+        ? item.product.sku.slice(0, -item.product.size.length - 1)
         : item.displaySku;
       const group = groups.get(baseSku) || [];
       group.push(item);
@@ -587,7 +587,11 @@ function App() {
           <span className="pill">商品 {workspace.products.length}</span>
           <span className="pill">站点 {workspace.markets.length}</span>
           <span className="pill">上架 {workspace.listings.length}</span>
-          <span className={`status-pill ${workspace.sync.lastSyncStatus}`}>{workspace.sync.lastSyncStatus}</span>
+          <span className={`status-pill ${workspace.sync.lastSyncStatus}`}>
+            {workspace.sync.lastSyncStatus === 'success' && workspace.sync.lastSyncAt
+              ? `上次同步: ${workspace.sync.lastSyncAt.slice(11, 19)}`
+              : workspace.sync.lastSyncStatus}
+          </span>
           <button className="ghost theme-toggle" onClick={() => setThemeMode((current) => current === "dark" ? "light" : "dark")}>{themeMode === "dark" ? "切到浅色" : "切到深色"}</button>
         </div>
       </section>

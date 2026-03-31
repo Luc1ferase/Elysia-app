@@ -79,7 +79,7 @@ export function createInitialWorkspace(): WorkspaceData {
     shippingRates: [],
     listings: [],
     sync: {
-      apiBaseUrl: "http://127.0.0.1:3000",
+      apiBaseUrl: "http://127.0.0.1:9800",
       lastSyncStatus: "idle",
     },
   };

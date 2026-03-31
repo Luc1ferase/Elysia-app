@@ -34,7 +34,9 @@ export function pickTextValue(source, keywords, fallback = "") {
     return fallback;
   }
   const value = source[key];
-  return typeof value === "string" ? value.trim() : fallback;
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number") return String(value);
+  return fallback;
 }
 
 export function buildSampleProduct(sheetName, sample, timestamp) {

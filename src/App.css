@@ -363,7 +363,7 @@ th {
   border-radius: 999px;
   background: var(--color-pill);
   color: var(--color-text-soft);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 
 .status-pill.success {
